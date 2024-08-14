@@ -84,13 +84,18 @@ describe Administrate::Order do
         allow(relation).to receive(:reorder).and_return(relation)
         allow(relation).to receive(:left_joins).and_return(relation)
         allow(relation).to receive(:group).and_return(relation)
+        allow(relation).to receive(:select).and_return(relation)
 
         ordered = order.apply(relation)
 
         expect(relation).to have_received(:left_joins).with(:name)
         expect(relation).to have_received(:group).with(:id)
+        expect(relation).to have_received(:select).with(
+          relation.arel_table[Arel.star],
+          to_sql('COUNT("users"."uid") AS has_many_count')
+        )
         expect(relation).to have_received(:reorder).with(
-          to_sql('COUNT("users"."uid") ASC'),
+          "has_many_count" => :asc
         )
         expect(ordered).to eq(relation)
       end
